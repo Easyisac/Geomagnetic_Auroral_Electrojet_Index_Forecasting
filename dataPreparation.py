@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+from numpy.lib.stride_tricks import sliding_window_view
 
 import zarr
 import gcsfs
@@ -24,17 +25,20 @@ def create_value_dataset(file='raw_data/omni_5min_2010.csv', loockback=1, loockf
     colsX = columns[4:-4] + columns[-3:-1]
     colsY = columns[-4]
     dataX = dataset[colsX].to_numpy()
-    dataY = dataset[colsY].to_numpy().reshape(-1, 1)
+    dataY = dataset[colsY].to_numpy()
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled = scaler.fit_transform(dataX, dataY)
-    lines = scaled.shape[0] - loockback * const - loockforward * const - 1
-    size = scaled.shape[1]
-    X = np.zeros((lines, loockback * const, size))
-    Y = np.zeros((lines, loockforward * const, 1))
-    for i in range(lines):
-        X[i] = scaled[i:i + loockback * const]
-        Y[i] = dataY[i + loockback * const: i + loockback * const + loockforward * const]
-
+    # lines = scaled.shape[0] - loockback * const - loockforward * const - 1
+    # size = scaled.shape[1]
+    # X = np.zeros((lines, loockback * const, size))
+    # Y = np.zeros((lines, loockforward * const, 1))
+    # for i in range(lines):
+    #     X[i] = scaled[i:i + loockback * const]
+    #     Y[i] = dataY[i + loockback * const: i + loockback * const + loockforward * const]
+    print(dataY.shape)
+    X = sliding_window_view(scaled[:-loockforward*const], loockback*const, axis=0)
+    Y = sliding_window_view(dataY[loockback*const:], loockforward*const)
+    print(X.shape, Y.shape)
     return X, Y
 
 
@@ -212,14 +216,22 @@ def create_image_dataset3(loockback=1, loockforward=1):
     print('Time: {}'.format(time.time() - start))
     print(time_index.shape)
     images = images[time_index, :, :]
-    lines = images.shape[0] - loockback * const - loockforward * const - 1
-    X = da.zeros(shape=(lines, loockback * const, 512, 512))
-    for i in range(lines):
-        if i%10000 == 0:
-            print(i)
-        X[i] = images[i:i + loockback * const]
-    return X, Y
+    # lines = time_index.shape[0] - loockback * const - loockforward * const - 1
+    # X_index = np.zeros(shape=(lines, loockback * const))
+    # X = da.zeros(shape=(lines, loockback * const, 512, 512))
+    # for i in range(lines):
+    #     if i%10000 == 0:
+    #         print(i, 'index')
+    #     X_index[i] = time_index[i:i + loockback * const]
+    # for i in range(lines):
+    #     if i%10000 == 0:
+    #         print(i)
+    #     X[i] = images[X_index[i], :, :]
+    # return X
+    X = sliding_window_view(images, loockback*const, axis=0)
+    print(X.shape)
+    return X
 
 
-#create_value_dataset()
+# create_value_dataset()
 create_image_dataset3()

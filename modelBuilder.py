@@ -39,6 +39,6 @@ def singleInputTransformer(x, y):
     x = layers.Dropout(0.1)(x)
     x = layers.Dense(20, activation="relu")(x)
     x = layers.Dropout(0.1)(x)
-    outputs = layers.Dense(1, activation="softmax")(x)
-    model = Model(inputs=inputs, outputs=output, name='FIF_LSTM')
+    output = layers.Dense(y.shape[1], activation="softmax")(x)
+    model = Model(inputs=inputs, outputs=output, name='single_Encoder')
     return model
