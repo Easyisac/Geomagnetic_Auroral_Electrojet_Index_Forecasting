@@ -1,3 +1,4 @@
+from datetime import datetime
 import tensorflow.keras
 from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
@@ -5,6 +6,9 @@ from tensorflow.keras import callbacks
 import tensorflow.keras.backend as bk
 import numpy as np
 from tools import rmse, calculate_stats, draw_chart
+
+train_epochs = 100
+batch_size = 48
 
 
 def execute_model(builder, train_x, train_y, test_x, test_y, dir, model_name):
@@ -47,7 +51,7 @@ def train_model(model, x, y, dir, model_name):
     """
     model.compile(optimizer='adam', loss=rmse, metrics=['mae', 'mse', rmse])
 
-    es = callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=0)
+    es = callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=1)
     log_dir = "{}/logs/fit/".format(dir) + datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq="epoch")
     history = model.fit(x, y, epochs=train_epochs, batch_size=batch_size, verbose=1, shuffle=1, validation_split=0.1,
