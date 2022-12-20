@@ -31,10 +31,6 @@ def create_value_dataset(file='raw_data/omni_5min_2010_2020.csv', loockback=1, l
     scaled = scaler.fit_transform(dataX, dataY)
     x = scaled.reshape(scaled.shape[0] // const, const, scaled.shape[1])
     y = dataY.reshape(dataY.shape[0] // const, const)
-    # X = sliding_window_view(scaled[:-loockforward * const], loockback * const, axis=0)
-    # Y = sliding_window_view(dataY[loockback * const:], loockforward * const)
-    # print(X.shape, Y.shape)
-    # return X, Y
     X = sliding_window_view(x[:-loockforward], (loockback, x.shape[1], x.shape[2]))
     X = X.reshape(X.shape[0], X.shape[3] * X.shape[4], X.shape[5])
     Y = sliding_window_view(y[loockback:], loockforward, axis=0)
@@ -121,31 +117,24 @@ def create_image_dataset(loockback=1, loockforward=1):
 
 class DataGen(tf.keras.utils.Sequence):
 
-    def __init__(self, X1, X2, Y, batch_size, shuffle=True):
+    def __init__(self, X0, X1, Y, batch_size, shuffle=True):
+        self.X0 = X0
         self.X1 = X1
-        self.X2 = X2
         self.Y = Y
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.n = X1.shape[0]
+        self.n = X0.shape[0]
 
     def on_epoch_end(self):
         if self.shuffle:
-            self.X1, self.X2, self.Y = shuffle(X1, X2, Y, random_state=42)
+            self.X0, self.X1, self.Y = shuffle(self.X0, self.X1, self.Y, random_state=42)
 
     def __getitem__(self, index):
+        bX0 = self.X0[index * self.batch_size:(index + 1) * self.batch_size]
         bX1 = self.X1[index * self.batch_size:(index + 1) * self.batch_size]
-        bX2 = self.X2[index * self.batch_size:(index + 1) * self.batch_size].compute()
         bY = self.Y[index * self.batch_size:(index + 1) * self.batch_size]
-        return bX1, bX2, bY
+        return (bX0, bX1), bY
 
     def __len__(self):
         return self.n // self.batch_size
-
-
-X1, Y = create_value_dataset(loockback=5, loockforward=2)
-X2 = create_image_dataset(loockback=5, loockforward=2)
-X1train, X1test, X2train, X2test, Ytrain, Ytest = train_test_split(X1, X2, Y, test_size=0.1, random_state=42, shuffle=True)
-train_gen = DataGen(X1train, X2train, Ytrain, 48)
-test_gen = DataGen(X1test, X2test, Ytest, 48)
 
