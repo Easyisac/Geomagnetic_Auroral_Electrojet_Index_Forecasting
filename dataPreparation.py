@@ -74,7 +74,7 @@ def create_image_dataset(loockback=1, loockforward=1):
         loc = "fdl-sdoml-v2/sdomlv2.zarr/{}".format(i)
         store = gcsfs.GCSMap(loc, gcs=gcs, check=False)
         root = zarr.group(store)
-        data = root['171A']
+        data = root['304A']# 304, 1600 would be the best in this order
         tob = np.array(data.attrs["T_OBS"])
         arr = da.from_array(data)
         t_obs[index:tob.shape[0] + index] = tob
@@ -126,8 +126,9 @@ class DataGen(tf.keras.utils.Sequence):
         self.n = X0.shape[0]
 
     def on_epoch_end(self):
-        if self.shuffle:
-            self.X0, self.X1, self.Y = shuffle(self.X0, self.X1, self.Y, random_state=42)
+        pass
+        # if self.shuffle:
+        #     self.X0, self.X1, self.Y = shuffle(self.X0, self.X1, self.Y, random_state=42)
 
     def __getitem__(self, index):
         bX0 = self.X0[index * self.batch_size:(index + 1) * self.batch_size]
