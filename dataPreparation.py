@@ -18,7 +18,7 @@ dask.config.set({"array.slicing.split_large_chunks": False})
 
 
 
-def create_value_dataset(file='raw_data/omni_5min_2010_2020.csv', loockback=1, loockforward=1):
+def create_value_dataset(file='./raw_data/omni_5min_2010_2020.csv', loockback=1, loockforward=1):
     const = 12
     dataset = pd.read_csv(file)
     dataset['datetime'] = set_date(dataset)
