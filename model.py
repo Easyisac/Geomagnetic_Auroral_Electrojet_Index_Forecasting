@@ -27,9 +27,8 @@ def train_model(model, data, validation, dir, model_name):
 
     es = callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=1)
     log_dir = "{}/logs/fit/".format(dir) + datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq="epoch")
-    history = model.fit(x=data, epochs=train_epochs, validation_data=validation,
-                        callbacks=[es, tensorboard])
+    tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, update_freq="epoch")
+    history = model.fit(x=data, epochs=train_epochs, validation_data=validation, callbacks=[es, tensorboard])
 
     plot_model(model, to_file="{}/plot_{}.png".format(dir, model_name), show_shapes=True, show_layer_names=True)
 
