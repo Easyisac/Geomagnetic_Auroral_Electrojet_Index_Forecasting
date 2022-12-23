@@ -78,6 +78,8 @@ def create_image_dataset(lookback=1, lookforward=1):
         data = root['304A']# 304, 1600 would be the best in this order
         tob = np.array(data.attrs["T_OBS"])
         arr = da.from_array(data, chunks=(1000, 512, 512))
+        print(arr)
+        print(arr.chunks)
         t_obs[index:tob.shape[0] + index] = tob
         images[index:arr.shape[0] + index, :, :] = arr
         index += arr.shape[0]
@@ -110,6 +112,8 @@ def create_image_dataset(lookback=1, lookforward=1):
     print('Time: {}'.format(time.time() - start))
     print('Total time: {} minutes'.format((total + time.time() - start)/60))
     images = images[time_index, :, :]
+    print(images)
+    print(images.chunks)
     images = images.reshape(images.shape[0] // const, const, images.shape[1], images.shape[2])
     X = da.lib.stride_tricks.sliding_window_view(images[:-lookforward], (lookback, images.shape[1], images.shape[2], images.shape[3]))
     X = X.reshape(X.shape[0], X.shape[4] * X.shape[5], X.shape[6], X.shape[7])
