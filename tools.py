@@ -37,7 +37,10 @@ def raw_pearson(y_true, y_pred):
         truediff += true ** 2
         preddiff += pred ** 2
         diffprod += true * pred
-    return diffprod / np.math.sqrt(truediff * preddiff)
+    res = np.zeros(len(diffprod))
+    for i in range(len(diffprod)):
+        res[i] = diffprod[i] / np.emath.sqrt(truediff[i] * preddiff[i])
+    return res
 
 
 def calculate_stats(actual, pred):
@@ -45,23 +48,23 @@ def calculate_stats(actual, pred):
     mae = raw_mae(actual, pred)
     rmse = raw_rmse(actual, pred)
     mape = raw_mape(actual, pred)
-    pear = raw_pearson(actual, pred)
+    #pear = raw_pearson(actual, pred)
 
-    return [mse, mae, rmse, mape, pear]
+    return [mse, mae, rmse, mape]
 
 
-def draw_chart(data, stats, dir, name, label):
+def draw_chart(y, y_pred, stats, dir, name, label):
     plt.clf()
     fig = plt.figure(figsize=(10, 8), dpi=80)
     sns.set_theme(style="darkgrid")
-    [mse, mae, rmse, rmape] = stats
-    text = "Overall Test Performance:\nMSE: %f, MAE: %f, RMSE: %f, MAPE: %f" % (
-        mse, mae, rmse, rmape)
-    fig.suptitle(text, fontsize=15)
+    [mse, mae, rmse, mape, pear] = stats
+    # text = "Overall Test Performance:\nMSE: %f, MAE: %f, RMSE: %f, MAPE: %f, PEAR: %f" % (
+    #     mse, mae, rmse, mape, pear)
+    # fig.suptitle(text, fontsize=15)
     # plt.plot(act, 'r-', label='actual values', linewidth=0.5)
     # plt.plot(pred, 'b-.', label=label, linewidth=0.7)
-    sns.lineplot(x='time', y='actual', data=data)
-    sns.lineplot(x='time', y='predicted', data=data)
+    sns.lineplot(data=y)
+    sns.lineplot(data=y_pred)
     plt.legend(loc='upper right')
     path = dir + '\\' + name + '.png'
     plt.savefig(path)

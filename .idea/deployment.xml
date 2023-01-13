@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="izinna@140.105.164.230:22" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="izinna@140.105.164.230:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/data/izinna/remote" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="izinna@158.110.145.57:22">
         <serverdata>
           <mappings>
@@ -10,5 +17,6 @@
         </serverdata>
       </paths>
     </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>
