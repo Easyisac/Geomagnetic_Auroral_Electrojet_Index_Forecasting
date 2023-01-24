@@ -1,0 +1,17 @@
+  FORMAT OF THE SUBSETTED FILE
+    
+    ITEMS                      FORMAT   
+     
+ 1 YEAR                          I4        
+ 2 DOY                           I4        
+ 3 Hour                          I3        
+ 4 Scalar B, nT                  F6.1      
+ 5 BX, nT (GSE, GSM)             F6.1      
+ 6 BY, nT (GSE)                  F6.1      
+ 7 BZ, nT (GSE)                  F6.1      
+ 8 SW Proton Density, N/cm^3     F6.1      
+ 9 SW Plasma Speed, km/s         F6.0      
+10 R (Sunspot No.)               I4        
+11 f10.7_index                   F6.1      
+12 AE-index, nT                  I5        
+13 Proton flux (>30 Mev)         F9.2      

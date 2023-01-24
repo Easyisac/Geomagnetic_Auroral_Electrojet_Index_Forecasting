@@ -1,0 +1,27 @@
+  FORMAT OF THE SUBSETTED FILE
+    
+    ITEMS                      FORMAT   
+     
+ 1 YEAR                          I4        
+ 2 DOY                           I4        
+ 3 Hour                          I3        
+ 4 # of points in Plasma averag. I4        
+ 5 Scalar B, nT                  F6.1      
+ 6 Vector B Magnitude,nT         F6.1      
+ 7 BY, nT (GSE)                  F6.1      
+ 8 BY, nT (GSM)                  F6.1      
+ 9 RMS_magnitude, nT             F6.1      
+10 RMS_BX_GSE, nT                F6.1      
+11 RMS_BY_GSE, nT                F6.1      
+12 RMS_BZ_GSE, nT                F6.1      
+13 SW Proton Density, N/cm^3     F6.1      
+14 sigma-n, N/cm^3)              F6.1      
+15 sigma-ratio                   F6.3      
+16 Flow pressure                 F6.2      
+17 Quasy-Invariant               F7.4      
+18 R (Sunspot No.)               I4        
+19 Dst-index, nT                 I6        
+20 f10.7_index                   F6.1      
+21 AE-index, nT                  I5        
+22 AL-index, nT                  I6        
+23 AU-index, nT                  I6        

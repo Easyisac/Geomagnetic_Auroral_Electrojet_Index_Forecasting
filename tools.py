@@ -9,6 +9,10 @@ def rmse(y_true, y_pred):
     return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 
+def mape(y_true, y_pred):
+    return K.mean(K.abs((y_true - y_pred) / y_true))
+
+
 def raw_mse(y_true, y_pred):
     return np.mean(np.square(y_true - y_pred))
 
@@ -57,14 +61,14 @@ def draw_chart(y, y_pred, stats, dir, name, label):
     plt.clf()
     fig = plt.figure(figsize=(10, 8), dpi=80)
     sns.set_theme(style="darkgrid")
-    [mse, mae, rmse, mape, pear] = stats
+    #[mse, mae, rmse, mape] = stats
     # text = "Overall Test Performance:\nMSE: %f, MAE: %f, RMSE: %f, MAPE: %f, PEAR: %f" % (
     #     mse, mae, rmse, mape, pear)
     # fig.suptitle(text, fontsize=15)
     # plt.plot(act, 'r-', label='actual values', linewidth=0.5)
     # plt.plot(pred, 'b-.', label=label, linewidth=0.7)
-    sns.lineplot(data=y)
-    sns.lineplot(data=y_pred)
+    sns.lineplot(data=y[:100])
+    sns.lineplot(data=y_pred[:100])
     plt.legend(loc='upper right')
     path = dir + '\\' + name + '.png'
     plt.savefig(path)
