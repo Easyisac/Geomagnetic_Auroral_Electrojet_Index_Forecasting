@@ -124,7 +124,7 @@ def runTest6():
 
 
 def runTest7():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=360, lookforward=24, batch_size=48, file='./raw_data/omni_new.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=360, lookforward=24, batch_size=16, file='./raw_data/omni_new_2010.csv')
     name = 'full_transformer_test'
     dir = './results/' + name
     encoder_shape = (X.shape[1], X.shape[2])
@@ -132,30 +132,21 @@ def runTest7():
     model = full_transformer_model(
         encoder_shape,
         decoder_shape,
-        e_head_size=12,
+        e_head_size=60,
         e_num_heads=8,
-        e_ff_dim=60,
+        e_ff_dim=360,
         num_encoder_blocks=6,
-        d_head_size=12,
+        d_head_size=20,
         d_num_heads=4,
         d_ff_dim=24,
         num_decoder_blocks=8,
-        dense_units=[60, 60, 30],
-        e_dropout=0,
-        d_dropout=0,
-        dense_dropout=0
+        dense_units=[60, 120, 60, 30],
+        e_dropout=0.1,
+        d_dropout=0.1,
+        dense_dropout=0.1
     )
     model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
     stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
-
-def runTest8():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=360, lookforward=24, batch_size=48,file='./raw_data/omni_new.csv' )
-
-    name = 'single_test'
-    dir = './results/' + name
-    model = singleInput(X, Y)
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, *_ = test_model(model, test_gen, dir, name, 'single_test')
 
 
 if __name__ == '__main__':
@@ -166,5 +157,4 @@ if __name__ == '__main__':
     #runTest4()
     #runTest5()
     #runTest6()
-    #runTest7()
-    runTest8()
+    runTest7()

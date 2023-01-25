@@ -6,6 +6,8 @@ from tensorflow.keras import callbacks
 import tensorflow.keras.backend as bk
 import numpy as np
 from tools import rmse, mape, calculate_stats, draw_chart
+from tensorflow import keras
+from keras.optimizer_v2.adam import Adam
 
 train_epochs = 100
 
@@ -23,7 +25,11 @@ def execute_model(model, train_data, val_data, test_data, dir, model_name):
 
 def train_model(model, data, validation, dir, model_name):
     bk.clear_session()
-    model.compile(optimizer='adam', loss=rmse, metrics=['mae', 'mse', rmse, mape])
+    lr_scheduler = keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=1e-1, decay_steps=100000, decay_rate=0.9, staircase=True
+    )
+    optimizer = Adam(learning_rate=lr_scheduler)
+    model.compile(optimizer=optimizer, loss=rmse, metrics=['mae', 'mse', rmse, mape])
     es = callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=1)
     log_dir = "{}/logs/fit/".format(dir) + datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, update_freq="epoch")

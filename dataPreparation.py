@@ -21,7 +21,7 @@ def create_value_dataset(file='./raw_data/omni_5min_2010_2020.csv', lookback=1, 
     const = 12
     dataset = pd.read_csv(file)
     dataset['date'] = set_date(dataset)
-    dataset = clean_missing(dataset)
+    dataset = clean_missing(dataset, 4, -1)
     columns = dataset.columns.tolist()
     colsX = columns[4:-1]  # + columns[-3:-1]
     colsY = columns[-4]
@@ -45,7 +45,7 @@ def create_value_dataset_hourly(file='./raw_data/omny_hourly.csv', lookback=1, l
     const = 1
     dataset = pd.read_csv(file)
     dataset['datetime'] = set_day(dataset)
-    dataset = clean_missing(dataset)
+    dataset = clean_missing(dataset, 3, -1)
     columns = dataset.columns.tolist()
     colsX = columns[3:-1]
     colsY = columns[-4]
@@ -75,8 +75,8 @@ def set_day(data):
     return pd.to_datetime(date['YEAR'] * 100000 + date['DOY'] * 100 + date['Hour'], format='%Y%j%H')
 
 
-def clean_missing(data):
-    cols = data.columns.tolist()[4:-1]
+def clean_missing(data, start, end):
+    cols = data.columns.tolist()[start:end]
     for col in cols:
         column = data[col]
         if check_errors(column.max()):
@@ -259,6 +259,18 @@ class EmbeddedDataGen(tf.keras.utils.Sequence):
 
 def prepare_data(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, _, _ = create_value_dataset(lookback=lookback, lookforward=lookforward, file=file)
+    Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
+                                                    shuffle=True)
+    Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
+                                                  random_state=42, shuffle=True)
+    train_gen = DataGen(Xtrain, Ytrain, batch_size)
+    val_gen = DataGen(Xval, Yval, batch_size)
+    test_gen = DataGen(Xtest, Ytest, batch_size)
+    return X, Y, train_gen, val_gen, test_gen
+
+
+def prepare_data_hours(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
+    X, Y, _, _ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
                                                     shuffle=True)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
