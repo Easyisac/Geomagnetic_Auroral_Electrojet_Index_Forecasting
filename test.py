@@ -6,6 +6,8 @@ from fullTransformerBuilder import full_transformer_model
 from model import *
 from dataPreparation import *
 from dask_ml.model_selection import train_test_split
+import winsound
+
 
 def genTest():
     X0, X1, Y, train_gen, val_gen, test_gen = prepare_data_mixed(lookback=10, lookforward=1, batch_size=1)
@@ -22,6 +24,7 @@ def runTest1():
     model = mixedInputTest((X0, X1), Y)
     model, history = train_model(model, train_gen, val_gen, dir, name)
 
+
 def runTest2():
     X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48)
 
@@ -30,8 +33,10 @@ def runTest2():
     model = singleInput(X, Y)
     model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
 
+
 def runTest3():
-    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48, file='./raw_data/omni_5min_2010.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48,
+                                                      file='./raw_data/omni_5min_2010.csv')
     name = 'transformer_test'
     dir = './results/' + name
     input_shape = (X.shape[1], X.shape[2])
@@ -50,8 +55,10 @@ def runTest3():
     model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
     stats, *_ = test_model(model, test_gen, dir, name, 'transformer')
 
+
 def runTest4():
-    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48, file='./raw_data/omni_5min_2010.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48,
+                                                      file='./raw_data/omni_5min_2010.csv')
     name = 'transformer_test_f'
     dir = './results/' + name
     input_shape = (X.shape[1], X.shape[2])
@@ -72,7 +79,8 @@ def runTest4():
 
 
 def runTest5():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_embedded(lookback=10, lookforward=1, batch_size=48, file='./raw_data/omni_5min_2010.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data_embedded(lookback=10, lookforward=1, batch_size=48,
+                                                               file='./raw_data/omni_5min_2010.csv')
     name = 'full_transformer_test_f'
     dir = './results/' + name
     encoder_shape = (X.shape[1] * X.shape[2], 3)
@@ -98,7 +106,8 @@ def runTest5():
 
 
 def runTest6():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full(lookback=48, lookforward=1, batch_size=48, file='./raw_data/omni_5min_2010.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data_full(lookback=48, lookforward=1, batch_size=48,
+                                                           file='./raw_data/omni_5min_2010.csv')
     name = 'full_transformer_test'
     dir = './results/' + name
     encoder_shape = (X.shape[1], X.shape[2])
@@ -124,7 +133,8 @@ def runTest6():
 
 
 def runTest7():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=360, lookforward=24, batch_size=16, file='./raw_data/omni_new_2010.csv')
+    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=120, lookforward=1, batch_size=16,
+                                                                 file='./raw_data/omni_new.csv')
     name = 'full_transformer_test'
     dir = './results/' + name
     encoder_shape = (X.shape[1], X.shape[2])
@@ -132,29 +142,94 @@ def runTest7():
     model = full_transformer_model(
         encoder_shape,
         decoder_shape,
-        e_head_size=60,
-        e_num_heads=8,
-        e_ff_dim=360,
+        e_head_size=120,
+        e_num_heads=4,
+        e_ff_dim=120,
         num_encoder_blocks=6,
         d_head_size=20,
         d_num_heads=4,
+        d_head_size_cross=24,
+        d_num_heads_cross=4,
         d_ff_dim=24,
-        num_decoder_blocks=8,
-        dense_units=[60, 120, 60, 30],
+        num_decoder_blocks=6,
+        dense_units=[24, 48, 96, 48, 24],
         e_dropout=0.1,
         d_dropout=0.1,
-        dense_dropout=0.1
+        dense_dropout=0.1,
+        # e_head_size=120,
+        # e_num_heads=6,
+        # e_ff_dim=120,
+        # num_encoder_blocks=1,
+        # d_head_size=20,
+        # d_num_heads=4,
+        # d_head_size_cross=20,
+        # d_num_heads_cross=4,
+        # d_ff_dim=24,
+        # num_decoder_blocks=3,
+        # dense_units=[24, 48 48, 24],
+        # e_dropout=0.1,
+        # d_dropout=0.1,
+        # dense_dropout=0.1
     )
     model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
     stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
 
 
+def runTest8():
+    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours_cols(lookback=120, lookforward=24, batch_size=16,
+                                                                      file='./raw_data/omni_new_2010.csv')
+    name = 'full_transformer_test'
+    dir = './results/' + name
+    encoder_shape = (X.shape[1], X.shape[2])
+    decoder_shape = (Y.shape[1], Y.shape[2])
+    model = full_transformer_model(
+        encoder_shape,
+        decoder_shape,
+        e_head_size=120,
+        e_num_heads=8,
+        e_ff_dim=120,
+        num_encoder_blocks=8,
+        d_head_size=20,
+        d_num_heads=4,
+        d_ff_dim=24,
+        num_decoder_blocks=8,
+        dense_units=[24, 48, 96, 192, 96, 48, 24],
+        e_dropout=0.1,
+        d_dropout=0.1,
+        dense_dropout=0.1
+    )
+    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
+    stats, y, y_pred = test_model(model, test_gen, dir, name, 'full_transformer')
+    y_tot = y[:, :, 1] - y[:, :, 0]
+    y_pred_tot = y_pred[:, :, 1] - y_pred[:, :, 0]
+    print('---------------------------------------------------------------------------')
+    print(y_tot.shape, y_pred_tot.shape)
+    stats = calculate_stats(y_tot, y_pred_tot)
+    print("[MSE, MAE, RMSE]")
+    print(stats)
+    stats = calculate_stats(y[:, :, 0], y_pred[:, :, 0])
+    print("[MSE, MAE, RMSE]")
+    print(stats)
+    stats = calculate_stats(y[:, :, 1], y_pred[:, :, 1])
+    print("[MSE, MAE, RMSE]")
+    print(stats)
+    # for i in range(y_tot.shape[1]):
+    #     par_stats = calculate_stats(y_tot[:, i], y_pred_tot[:, i])
+    #     print("[MSE, MAE, RMSE] of {}".format(i))
+    #     print(par_stats)
+
+
 if __name__ == '__main__':
-    #genTest()
-    #runTest1()
-    #runTest2()
-    #runTest3()
-    #runTest4()
-    #runTest5()
-    #runTest6()
+    # genTest()
+    # runTest1()
+    # runTest2()
+    # runTest3()
+    # runTest4()
+    # runTest5()
+    # runTest6()
     runTest7()
+    # runTest8()
+
+    duration = 1000  # milliseconds
+    freq = 440  # Hz
+    winsound.Beep(freq, duration)

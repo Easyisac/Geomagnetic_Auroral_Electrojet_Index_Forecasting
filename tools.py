@@ -51,10 +51,9 @@ def calculate_stats(actual, pred):
     mse = raw_mse(actual, pred)
     mae = raw_mae(actual, pred)
     rmse = raw_rmse(actual, pred)
-    mape = raw_mape(actual, pred)
     #pear = raw_pearson(actual, pred)
 
-    return [mse, mae, rmse, mape]
+    return [mse, mae, rmse]
 
 
 def draw_chart(y, y_pred, stats, dir, name, label):
@@ -67,9 +66,8 @@ def draw_chart(y, y_pred, stats, dir, name, label):
     # fig.suptitle(text, fontsize=15)
     # plt.plot(act, 'r-', label='actual values', linewidth=0.5)
     # plt.plot(pred, 'b-.', label=label, linewidth=0.7)
-    sns.lineplot(data=y[:100])
-    sns.lineplot(data=y_pred[:100])
-    plt.legend(loc='upper right')
+    sns.lineplot(data=y[:100], label='actual')
+    sns.lineplot(data=y_pred[:100], label='predicted')
     path = dir + '\\' + name + '.png'
     plt.savefig(path)
     plt.close(fig)

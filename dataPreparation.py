@@ -45,9 +45,12 @@ def create_value_dataset_hourly(file='./raw_data/omny_hourly.csv', lookback=1, l
     const = 1
     dataset = pd.read_csv(file)
     dataset['datetime'] = set_day(dataset)
+    dataset = dataset[('2007-12-31' < dataset['datetime'])]
+    dataset = dataset[(dataset['datetime'] < '2019-01-01')]
+    dataset['datetime'] = dataset['datetime'].apply(lambda d: d.value)
     dataset = clean_missing(dataset, 3, -1)
     columns = dataset.columns.tolist()
-    colsX = columns[3:-1]
+    colsX = columns[3:]
     colsY = columns[-4]
     dataX = dataset[colsX].to_numpy()
     dataY = dataset[colsY].to_numpy(dtype='float32')
@@ -64,6 +67,28 @@ def create_value_dataset_hourly(file='./raw_data/omny_hourly.csv', lookback=1, l
     target_embedding = create_target_embedding(Y.shape)
     return X, Y, context_embedding, target_embedding
 
+def create_value_dataset_hourly_cols(file='./raw_data/omny_hourly.csv', lookback=1, lookforward=1):
+    const = 1
+    dataset = pd.read_csv(file)
+    dataset['datetime'] = set_day(dataset)
+    dataset = clean_missing(dataset, 3, -1)
+    columns = dataset.columns.tolist()
+    colsX = columns[3:-1]
+    colsY = columns[-3:-1]
+    dataX = dataset[colsX].to_numpy()
+    dataY = dataset[colsY].to_numpy(dtype='float32')
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled = scaler.fit_transform(dataX, dataY)
+    x = scaled.reshape(scaled.shape[0] // const, const, scaled.shape[1])
+    y = dataY.reshape(dataY.shape[0] // const, const, dataY.shape[1])
+    X = sliding_window_view(x[:-lookforward], (lookback, x.shape[1], x.shape[2]))
+    X = X.reshape(X.shape[0], X.shape[3] * X.shape[4], X.shape[5])
+    Y = sliding_window_view(y[lookback:], (lookforward, y.shape[1], y.shape[2]))
+    Y = Y.reshape(Y.shape[0], Y.shape[3] * Y.shape[4], Y.shape[5])
+
+    # context_embedding = create_context_embedding(X)
+    # target_embedding = create_target_embedding(Y.shape)
+    return X, Y#, context_embedding, target_embedding
 
 def set_date(data):
     date = data[['Year', 'Day', 'Hour', 'Minute']]
@@ -169,7 +194,7 @@ def create_image_dataset(lookback=1, lookforward=1):
 
 class DataGen(tf.keras.utils.Sequence):
 
-    def __init__(self, X, Y, batch_size, shuffle=True):
+    def __init__(self, X, Y, batch_size, shuffle=False):
         self.X = X
         self.Y = Y
         self.batch_size = batch_size
@@ -192,7 +217,7 @@ class DataGen(tf.keras.utils.Sequence):
 
 class MixedDataGen(tf.keras.utils.Sequence):
 
-    def __init__(self, X0, X1, Y, batch_size, shuffle=True):
+    def __init__(self, X0, X1, Y, batch_size, shuffle=False):
         self.X0 = X0
         self.X1 = X1.rechunk(chunks=(1000, -1, -1, -1))
         self.Y = Y
@@ -226,7 +251,7 @@ class DataGenFull(tf.keras.utils.Sequence):
         self.Y = Y
         self.batch_size = batch_size
         self.n = self.X.shape[0]
-        self.target = np.broadcast_to(target, (self.n, 1) + target.shape)
+        self.target = np.broadcast_to(target, (self.n,) + target.shape)
 
     def __getitem__(self, index):
         bX = self.X[index * self.batch_size:(index + 1) * self.batch_size]
@@ -260,9 +285,9 @@ class EmbeddedDataGen(tf.keras.utils.Sequence):
 def prepare_data(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, _, _ = create_value_dataset(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
-                                                    shuffle=True)
+                                                    shuffle=False)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
-                                                  random_state=42, shuffle=True)
+                                                  random_state=42, shuffle=False)
     train_gen = DataGen(Xtrain, Ytrain, batch_size)
     val_gen = DataGen(Xval, Yval, batch_size)
     test_gen = DataGen(Xtest, Ytest, batch_size)
@@ -272,9 +297,9 @@ def prepare_data(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_
 def prepare_data_hours(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, _, _ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
-                                                    shuffle=True)
+                                                    shuffle=False)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
-                                                  random_state=42, shuffle=True)
+                                                  random_state=42, shuffle=False)
     train_gen = DataGen(Xtrain, Ytrain, batch_size)
     val_gen = DataGen(Xval, Yval, batch_size)
     test_gen = DataGen(Xtest, Ytest, batch_size)
@@ -297,10 +322,10 @@ def prepare_data_mixed(lookback=1, lookforward=1, batch_size=1):
 def prepare_data_full(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, _, _ = create_value_dataset(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
-                                                    shuffle=True)
+                                                    shuffle=False)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
-                                                  random_state=42, shuffle=True)
-    target = np.zeros(Y.shape[1])
+                                                  random_state=42, shuffle=False)
+    target = np.zeros((Y.shape[1], 1))
     train_gen = DataGenFull(Xtrain, target, Ytrain, batch_size)
     val_gen = DataGenFull(Xval, target, Yval, batch_size)
     test_gen = DataGenFull(Xtest, target, Ytest, batch_size)
@@ -308,12 +333,25 @@ def prepare_data_full(lookback=1, lookforward=1, batch_size=1, file='./raw_data/
 
 
 def prepare_data_full_hours(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_hourly.csv'):
-    X, Y, _, _ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
+    X, Y, *_ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
                                                     shuffle=True)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
                                                   random_state=42, shuffle=True)
-    target = np.zeros(Y.shape[1])
+    target = np.ones((1, Y.shape[1]))
+    train_gen = DataGenFull(Xtrain, target, Ytrain, batch_size)
+    val_gen = DataGenFull(Xval, target, Yval, batch_size)
+    test_gen = DataGenFull(Xtest, target, Ytest, batch_size)
+    return X, Y, train_gen, val_gen, test_gen
+
+
+def prepare_data_full_hours_cols(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_hourly.csv'):
+    X, Y = create_value_dataset_hourly_cols(lookback=lookback, lookforward=lookforward, file=file)
+    Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
+                                                    shuffle=False)
+    Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
+                                                  random_state=42, shuffle=False)
+    target = np.ones((Y.shape[1], Y.shape[2]))
     train_gen = DataGenFull(Xtrain, target, Ytrain, batch_size)
     val_gen = DataGenFull(Xval, target, Yval, batch_size)
     test_gen = DataGenFull(Xtest, target, Ytest, batch_size)
@@ -323,9 +361,9 @@ def prepare_data_full_hours(lookback=1, lookforward=1, batch_size=1, file='./raw
 def prepare_data_embedded(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, context, target = create_value_dataset(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(context, Y, test_size=0.1, random_state=42,
-                                                    shuffle=True)
+                                                    shuffle=False)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
-                                                  random_state=42, shuffle=True)
+                                                  random_state=42, shuffle=False)
     train_gen = EmbeddedDataGen(Xtrain, target, Ytrain, batch_size)
     val_gen = EmbeddedDataGen(Xval, target, Yval, batch_size)
     test_gen = EmbeddedDataGen(Xtest, target, Ytest, 1)
