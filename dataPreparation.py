@@ -263,6 +263,29 @@ class DataGenFull(tf.keras.utils.Sequence):
         return self.n // self.batch_size
 
 
+class DataGenTuner(tf.keras.utils.Sequence):
+
+    def __init__(self, X, target, Y, batch_size):
+        self.X = X
+        self.Y = Y
+        self.batch_size = batch_size
+        self.n = self.X.shape[0]
+        self.target = np.broadcast_to(target, (self.n,) + target.shape)
+
+    def on_epoch_end(self):
+        self.indexes = np.arange(self.n)
+        np.random.shuffle(self.indexes)
+
+    def __getitem__(self, index):
+        bX = self.X[index * self.batch_size:(index + 1) * self.batch_size]
+        bTarget = self.target[index * self.batch_size:(index + 1) * self.batch_size]
+        bY = self.Y[index * self.batch_size:(index + 1) * self.batch_size]
+        return (bX, bTarget), bY
+
+    def __len__(self):
+        return 500
+
+
 class EmbeddedDataGen(tf.keras.utils.Sequence):
 
     def __init__(self, context_embedding, target_embedding, Y, batch_size):
@@ -297,9 +320,9 @@ def prepare_data(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_
 def prepare_data_hours(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_5min_2010_2020.csv'):
     X, Y, _, _ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
-                                                    shuffle=False)
+                                                    shuffle=True)
     Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
-                                                  random_state=42, shuffle=False)
+                                                  random_state=42, shuffle=True)
     train_gen = DataGen(Xtrain, Ytrain, batch_size)
     val_gen = DataGen(Xval, Yval, batch_size)
     test_gen = DataGen(Xtest, Ytest, batch_size)
@@ -367,4 +390,16 @@ def prepare_data_embedded(lookback=1, lookforward=1, batch_size=1, file='./raw_d
     train_gen = EmbeddedDataGen(Xtrain, target, Ytrain, batch_size)
     val_gen = EmbeddedDataGen(Xval, target, Yval, batch_size)
     test_gen = EmbeddedDataGen(Xtest, target, Ytest, 1)
+    return X, Y, train_gen, val_gen, test_gen
+
+def prepare_data_hours_tuner(lookback=1, lookforward=1, batch_size=1, file='./raw_data/omni_hourly.csv'):
+    X, Y, *_ = create_value_dataset_hourly(lookback=lookback, lookforward=lookforward, file=file)
+    Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size=0.1, random_state=42,
+                                                    shuffle=True)
+    Xtrain, Xval, Ytrain, Yval = train_test_split(Xtrain, Ytrain, test_size=0.01,
+                                                  random_state=42, shuffle=True)
+    target = np.ones((1, Y.shape[1]))
+    train_gen = DataGenTuner(Xtrain, target, Ytrain, batch_size)
+    val_gen = DataGenFull(Xval, target, Yval, batch_size)
+    test_gen = DataGenFull(Xtest, target, Ytest, batch_size)
     return X, Y, train_gen, val_gen, test_gen

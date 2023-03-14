@@ -22,7 +22,6 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
 
 
 def transformer_decoder(inputs, encoder_inputs, head_size, num_heads, head_size_cross, num_heads_cross, ff_dim, dropout=0):
-    # x = layers.LayerNormalization(epsilon=1e-6)(inputs)
     x = inputs
     x = layers.MultiHeadAttention(
         key_dim=head_size, num_heads=num_heads, dropout=dropout
@@ -53,14 +52,13 @@ def full_transformer_model(encoder_shape, decoder_shape, e_head_size, e_num_head
     x = encoder_inputs
     for _ in range(num_encoder_blocks):
         x = transformer_encoder(x, e_head_size, e_num_heads, e_ff_dim, e_dropout)
-    encoder_res = x #layers.LayerNormalization(epsilon=1e-6)(x)
+    encoder_res = x
 
     decoder_inputs = layers.Input(shape=decoder_shape)
     x = decoder_inputs
     for _ in range(num_decoder_blocks):
         x = transformer_decoder(x, encoder_res, d_head_size, d_num_heads, d_head_size_cross, d_num_heads_cross, d_ff_dim, d_dropout)
 
-    #x = layers.LayerNormalization(epsilon=1e-6)(x)
     x = layers.Flatten()(x)
 
     for dim in dense_units:

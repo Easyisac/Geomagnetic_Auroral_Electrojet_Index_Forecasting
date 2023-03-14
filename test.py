@@ -6,134 +6,13 @@ from fullTransformerBuilder import full_transformer_model
 from model import *
 from dataPreparation import *
 from dask_ml.model_selection import train_test_split
+import keras_tuner
 import winsound
 
 
-def genTest():
-    X0, X1, Y, train_gen, val_gen, test_gen = prepare_data_mixed(lookback=10, lookforward=1, batch_size=1)
 
-    X, Y = train_gen[0]
-    print(X[1].shape)
-
-
-def runTest1():
-    X0, X1, Y, train_gen, val_gen, test_gen = prepare_data_mixed(lookback=10, lookforward=1, batch_size=1)
-
-    name = 'mixed_test'
-    dir = './results/' + name
-    model = mixedInputTest((X0, X1), Y)
-    model, history = train_model(model, train_gen, val_gen, dir, name)
-
-
-def runTest2():
-    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48)
-
-    name = 'single_test'
-    dir = './results/' + name
-    model = singleInput(X, Y)
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-
-
-def runTest3():
-    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48,
-                                                      file='./raw_data/omni_5min_2010.csv')
-    name = 'transformer_test'
-    dir = './results/' + name
-    input_shape = (X.shape[1], X.shape[2])
-    output_shape = Y.shape[1]
-    model = transformer_model(
-        input_shape,
-        output_shape,
-        head_size=20,
-        num_heads=60,
-        ff_dim=80,
-        num_transformer_blocks=8,
-        dense_units=[30, 60, 60, 60, 30],
-        dropout=0.3,
-        dense_dropout=0.2
-    )
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, *_ = test_model(model, test_gen, dir, name, 'transformer')
-
-
-def runTest4():
-    X, Y, train_gen, val_gen, test_gen = prepare_data(lookback=10, lookforward=1, batch_size=48,
-                                                      file='./raw_data/omni_5min_2010.csv')
-    name = 'transformer_test_f'
-    dir = './results/' + name
-    input_shape = (X.shape[1], X.shape[2])
-    output_shape = Y.shape[1]
-    model = transformer_model_f(
-        input_shape,
-        output_shape,
-        head_size=60,
-        num_heads=12,
-        ff_dim=50,
-        num_transformer_blocks=10,
-        dense_units=[960, 480, 240, 120, 60, 30],
-        dropout=0.2,
-        dense_dropout=0.2
-    )
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, *_ = test_model(model, test_gen, dir, name, 'transformer')
-
-
-def runTest5():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_embedded(lookback=10, lookforward=1, batch_size=48,
-                                                               file='./raw_data/omni_5min_2010.csv')
-    name = 'full_transformer_test_f'
-    dir = './results/' + name
-    encoder_shape = (X.shape[1] * X.shape[2], 3)
-    decoder_shape = (Y.shape[1], 3)
-    model = full_transformer_model(
-        encoder_shape,
-        decoder_shape,
-        e_head_size=30,
-        e_num_heads=2,
-        e_ff_dim=50,
-        num_encoder_blocks=3,
-        d_head_size=30,
-        d_num_heads=3,
-        d_ff_dim=50,
-        num_decoder_blocks=3,
-        dense_units=[120, 60, 30],
-        e_dropout=0.2,
-        d_dropout=0.2,
-        dense_dropout=0.2
-    )
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
-
-
-def runTest6():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full(lookback=48, lookforward=1, batch_size=48,
-                                                           file='./raw_data/omni_5min_2010.csv')
-    name = 'full_transformer_test'
-    dir = './results/' + name
-    encoder_shape = (X.shape[1], X.shape[2])
-    decoder_shape = (1, Y.shape[1])
-    model = full_transformer_model(
-        encoder_shape,
-        decoder_shape,
-        e_head_size=30,
-        e_num_heads=12,
-        e_ff_dim=50,
-        num_encoder_blocks=5,
-        d_head_size=30,
-        d_num_heads=12,
-        d_ff_dim=50,
-        num_decoder_blocks=5,
-        dense_units=[120, 60, 30],
-        e_dropout=0.2,
-        d_dropout=0.2,
-        dense_dropout=0.2
-    )
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
-
-
-def runTest7():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=120, lookforward=1, batch_size=16,
+def runTest():
+    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours(lookback=120, lookforward=24, batch_size=16,
                                                                  file='./raw_data/omni_new.csv')
     name = 'full_transformer_test'
     dir = './results/' + name
@@ -142,93 +21,102 @@ def runTest7():
     model = full_transformer_model(
         encoder_shape,
         decoder_shape,
-        e_head_size=120,
-        e_num_heads=4,
-        e_ff_dim=120,
-        num_encoder_blocks=6,
-        d_head_size=20,
-        d_num_heads=4,
-        d_head_size_cross=24,
-        d_num_heads_cross=4,
-        d_ff_dim=24,
-        num_decoder_blocks=6,
-        dense_units=[24, 48, 96, 48, 24],
-        e_dropout=0.1,
-        d_dropout=0.1,
-        dense_dropout=0.1,
-        # e_head_size=120,
-        # e_num_heads=6,
-        # e_ff_dim=120,
-        # num_encoder_blocks=1,
-        # d_head_size=20,
-        # d_num_heads=4,
-        # d_head_size_cross=20,
-        # d_num_heads_cross=4,
-        # d_ff_dim=24,
-        # num_decoder_blocks=3,
-        # dense_units=[24, 48 48, 24],
-        # e_dropout=0.1,
-        # d_dropout=0.1,
-        # dense_dropout=0.1
+        e_head_size=120,                     #120,
+        e_num_heads=4,                      #4,
+        e_ff_dim=180,                       #120,
+        num_encoder_blocks=6,               #6,
+        d_head_size=96,                     #20,
+        d_num_heads=4,                      #4,
+        d_head_size_cross=120,               #24,
+        d_num_heads_cross=8,                #4,
+        d_ff_dim=48,                       #24,
+        num_decoder_blocks=6,               #6,
+        dense_units=[24, 48, 96, 96, 48, 24],
+        e_dropout=0.36,                    #0.1,
+        d_dropout=0.08,                      #0.1,
+        dense_dropout=0.015                  #0.1
     )
     model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
     stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
 
 
-def runTest8():
-    X, Y, train_gen, val_gen, test_gen = prepare_data_full_hours_cols(lookback=120, lookforward=24, batch_size=16,
-                                                                      file='./raw_data/omni_new_2010.csv')
-    name = 'full_transformer_test'
+
+
+def runTest2():
+    X, Y, train_gen, val_gen, test_gen = prepare_data_hours(lookback=48, lookforward=24, batch_size=16,
+                                                                 file='./raw_data/omni_new.csv')
+    name = 'classic_lstm'
     dir = './results/' + name
-    encoder_shape = (X.shape[1], X.shape[2])
-    decoder_shape = (Y.shape[1], Y.shape[2])
+    input_shape = (X.shape[1], X.shape[2])
+    output_shape = Y.shape[1]
+    model = classic_LSTM(
+        input_shape,
+        output_shape,
+        lstm_nodes=48
+    )
+    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
+    stats, *_ = test_model(model, test_gen, dir, name, 'classic_lstm')
+
+
+def build_model(hp):
+    encoder_shape = (120, 21)
+    decoder_shape = (1, 24)
     model = full_transformer_model(
         encoder_shape,
         decoder_shape,
-        e_head_size=120,
-        e_num_heads=8,
-        e_ff_dim=120,
-        num_encoder_blocks=8,
-        d_head_size=20,
-        d_num_heads=4,
-        d_ff_dim=24,
-        num_decoder_blocks=8,
-        dense_units=[24, 48, 96, 192, 96, 48, 24],
-        e_dropout=0.1,
-        d_dropout=0.1,
-        dense_dropout=0.1
+        e_head_size=hp.Int("e_head_size", min_value=10, max_value=240, step=10),
+        e_num_heads=hp.Int("e_num_heads", min_value=1, max_value=8, step=1),
+        e_ff_dim=hp.Int("e_ff_dim", min_value=20, max_value=240, step=10),
+        num_encoder_blocks=hp.Int("num_encoder_blocks", min_value=1, max_value=8, step=1),
+        d_head_size=hp.Int("d_head_size", min_value=10, max_value=120, step=10),
+        d_num_heads=hp.Int("d_num_heads", min_value=1, max_value=8, step=1),
+        d_head_size_cross=hp.Int("d_head_siz_cross", min_value=10, max_value=120, step=10),
+        d_num_heads_cross=hp.Int("d_num_heads_cross", min_value=1, max_value=8, step=1),
+        d_ff_dim=hp.Int("d_ff_dim", min_value=20, max_value=240, step=10),
+        num_decoder_blocks=hp.Int("num_decoder_blocks", min_value=1, max_value=8, step=1),
+        dense_units=[24, 48, 96, 48, 24],
+        e_dropout=hp.Float("e_dropout", min_value=0, max_value=0.5),
+        d_dropout=hp.Float("d_dropout", min_value=0, max_value=0.5),
+        dense_dropout=hp.Float("dense_dropout", min_value=0, max_value=0.5),
     )
-    model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
-    stats, y, y_pred = test_model(model, test_gen, dir, name, 'full_transformer')
-    y_tot = y[:, :, 1] - y[:, :, 0]
-    y_pred_tot = y_pred[:, :, 1] - y_pred[:, :, 0]
-    print('---------------------------------------------------------------------------')
-    print(y_tot.shape, y_pred_tot.shape)
-    stats = calculate_stats(y_tot, y_pred_tot)
-    print("[MSE, MAE, RMSE]")
-    print(stats)
-    stats = calculate_stats(y[:, :, 0], y_pred[:, :, 0])
-    print("[MSE, MAE, RMSE]")
-    print(stats)
-    stats = calculate_stats(y[:, :, 1], y_pred[:, :, 1])
-    print("[MSE, MAE, RMSE]")
-    print(stats)
-    # for i in range(y_tot.shape[1]):
-    #     par_stats = calculate_stats(y_tot[:, i], y_pred_tot[:, i])
-    #     print("[MSE, MAE, RMSE] of {}".format(i))
-    #     print(par_stats)
+    bk.clear_session()
+    lr_scheduler = keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log"), decay_steps=100000, decay_rate=hp.Float("dr", min_value=0.75, max_value=1, sampling="log"), staircase=True
+    )
+    optimizer = Adam(learning_rate=lr_scheduler)
+    model.compile(optimizer=optimizer, loss=rmse, metrics=['mae', 'mse', rmse])
+    return model
+
+
+def runTest3():
+    X, Y, train_gen, val_gen, test_gen = prepare_data_hours_tuner(lookback=120, lookforward=24, batch_size=16,
+                                                                 file='./raw_data/omni_new.csv')
+
+    name = 'full_transformer_test'
+    dir = './results/' + name
+
+    tuner = keras_tuner.RandomSearch(
+        hypermodel=build_model,
+        objective="val_loss",
+        max_trials=100,
+        executions_per_trial=2,
+        overwrite=True,
+        directory=dir,
+        project_name=name,
+    )
+
+    tuner.search_space_summary()
+    tuner.search(train_gen, epochs=10, validation_data=val_gen)
+
+    # model, history, results = execute_model(model, train_gen, val_gen, test_gen, dir, name)
+    # stats, *_ = test_model(model, test_gen, dir, name, 'full_transformer')
+
 
 
 if __name__ == '__main__':
-    # genTest()
-    # runTest1()
-    # runTest2()
+    # runTest()
+    runTest2()
     # runTest3()
-    # runTest4()
-    # runTest5()
-    # runTest6()
-    runTest7()
-    # runTest8()
 
     duration = 1000  # milliseconds
     freq = 440  # Hz

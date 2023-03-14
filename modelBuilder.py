@@ -48,6 +48,15 @@ def transformer_model_f(input_shape, output_shape, head_size, num_heads, ff_dim,
     outputs = layers.Dense(output_shape)(x)
     return Model(inputs=inputs, outputs=outputs)
 
+def classic_LSTM(input_shape, output_shape, lstm_nodes=20):
+    inputs = layers.Input(shape=(input_shape[0], input_shape[1]))
+    lstm1 = layers.LSTM(lstm_nodes, return_sequences=True)(inputs)
+    lstm2 = layers.LSTM(lstm_nodes, return_sequences=True)(lstm1)
+    lstm3 = layers.LSTM(lstm_nodes)(lstm2)
+    output = layers.Dense(output_shape)(lstm3)
+    model = Model(inputs=[inputs], outputs=output, name='Classic_LSTM')
+    return model
+
 # def singleInput(X, Y):
 #     input_shape = (X.shape[1], X.shape[2])
 #     inputs = layers.Input(shape=input_shape)

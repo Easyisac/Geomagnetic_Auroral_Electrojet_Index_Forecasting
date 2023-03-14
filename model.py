@@ -9,7 +9,7 @@ from tools import rmse, mape, calculate_stats, draw_chart
 from tensorflow import keras
 from keras.optimizer_v2.adam import Adam
 
-train_epochs = 500
+train_epochs = 25
 
 
 def execute_model(model, train_data, val_data, test_data, dir, model_name):
@@ -26,7 +26,7 @@ def execute_model(model, train_data, val_data, test_data, dir, model_name):
 def train_model(model, data, validation, dir, model_name):
     bk.clear_session()
     lr_scheduler = keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=1e-4, decay_steps=100000, decay_rate=0.9, staircase=True
+        initial_learning_rate=1e-3, decay_steps=100000, decay_rate=0.85, staircase=True
     )
     optimizer = Adam(learning_rate=lr_scheduler)
     model.compile(optimizer=optimizer, loss=rmse, metrics=['mae', 'mse', rmse])
@@ -63,9 +63,10 @@ def evaluate_model(model, data):
 
 def test_model(model, data, dir, name, label):
     x = data.X
-    target = data.target
+    # target = data.target
     y = data.Y
-    y_pred = model.predict(((x, target)), verbose=1)
+    # y_pred = model.predict(((x, target)), verbose=1)
+    y_pred = model.predict(x, verbose=1)
     print("___________ calculate stats ___________")
     print("[MSE, MAE, RMSE]")
     stats = calculate_stats(y, y_pred)
